@@ -12,7 +12,11 @@ function getInitials(name) {
 }
 
 function statusClass(status) {
-    return `application-status application-status-${(status || "pending").toLowerCase()}`;
+    return `application-status application-status-${normalizeStatus(status)}`;
+}
+
+function normalizeStatus(status) {
+    return status?.trim().toLowerCase() || "pending";
 }
 
 function applicationKey(application, index) {
@@ -30,13 +34,23 @@ export default function Applications() {
     const [loadingApplications, setLoadingApplications] = useState(false);
     const [reviewingApplicationKey, setReviewingApplicationKey] = useState(null);
     const [searched, setSearched] = useState(false);
+    const [statusFilter, setStatusFilter] = useState("all");
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
 
     useEffect(() => {
         let cancelled = false;
         getEvents()
-            .then((data) => { if (!cancelled) setEvents(Array.isArray(data) ? data : []); })
+            .then((data) => {
+                if (cancelled) return;
+                const availableEvents = Array.isArray(data) ? data : [];
+                setEvents(availableEvents);
+                if (availableEvents.length > 0) {
+                    const firstEventId = String(availableEvents[0].id);
+                    setEventId(firstEventId);
+                    loadApplicationsForEvent(firstEventId);
+                }
+            })
             .catch((err) => { if (!cancelled) setError(err.message); })
             .finally(() => { if (!cancelled) setLoadingEvents(false); });
         return () => { cancelled = true; };
@@ -57,18 +71,19 @@ export default function Applications() {
         };
     }, []);
 
-    async function loadApplications(event) {
-        event.preventDefault();
-        if (!eventId) {
+    async function loadApplicationsForEvent(selectedEventId) {
+        if (!selectedEventId) {
             setError("Select an event to view its applications.");
             return;
         }
         setLoadingApplications(true);
         setSearched(true);
+        setApplications([]);
+        setStatusFilter("all");
         setError("");
         setMessage("");
         try {
-            const data = await getEventApplications(eventId);
+            const data = await getEventApplications(selectedEventId);
             if (Array.isArray(data)) {
                 setApplications(data);
                 if (data.length === 0) setMessage("No applications have been submitted for this event yet.");
@@ -82,6 +97,11 @@ export default function Applications() {
         } finally {
             setLoadingApplications(false);
         }
+    }
+
+    function loadApplications(event) {
+        event.preventDefault();
+        return loadApplicationsForEvent(eventId);
     }
 
     async function handleReview(application, status, index) {
@@ -107,9 +127,12 @@ export default function Applications() {
     }
 
     const selectedEvent = events.find((event) => String(event.id) === String(eventId));
-    const pendingCount = applications.filter((application) => application.status === "Pending").length;
-    const approvedCount = applications.filter((application) => application.status === "Approved").length;
-    const rejectedCount = applications.filter((application) => application.status === "Rejected").length;
+    const pendingCount = applications.filter((application) => normalizeStatus(application.status) === "pending").length;
+    const approvedCount = applications.filter((application) => normalizeStatus(application.status) === "approved").length;
+    const rejectedCount = applications.filter((application) => normalizeStatus(application.status) === "rejected").length;
+    const filteredApplications = statusFilter === "all"
+        ? applications
+        : applications.filter((application) => normalizeStatus(application.status) === statusFilter);
 
     return (
         <div className="applications-page">
@@ -128,7 +151,7 @@ export default function Applications() {
             <form className="applications-filter" onSubmit={loadApplications}>
                 <div className="applications-filter-copy">
                     <strong>Choose an event</strong>
-                    <span>Applications will appear here once you select an event.</span>
+                    <span>Select an event to load its applications automatically.</span>
                 </div>
                 <div className="applications-event-picker" ref={eventPickerRef}>
                     <button
@@ -154,6 +177,7 @@ export default function Applications() {
                                 onClick={() => {
                                     setEventId(String(event.id));
                                     setEventMenuOpen(false);
+                                    loadApplicationsForEvent(String(event.id));
                                 }}
                             >
                                 <span>{event.title}</span>
@@ -163,7 +187,7 @@ export default function Applications() {
                     </div>}
                 </div>
                 <button className="btn-primary" type="submit" disabled={loadingEvents || loadingApplications || !eventId}>
-                    {loadingApplications ? "Loading…" : "View applications"}
+                    {loadingApplications ? "Loading…" : searched ? "Refresh applications" : "View applications"}
                 </button>
             </form>
 
@@ -171,20 +195,31 @@ export default function Applications() {
                 <div className="applications-results-heading">
                     <div>
                         <h2>{selectedEvent?.title || "Applications"}</h2>
-                        <span>{applications.length} {applications.length === 1 ? "application" : "applications"}</span>
-                    </div>
-                    <div className="application-summary">
-                        <span><i className="summary-dot summary-dot-pending" />{pendingCount} pending</span>
-                        <span><i className="summary-dot summary-dot-approved" />{approvedCount} approved</span>
-                        <span><i className="summary-dot summary-dot-rejected" />{rejectedCount} rejected</span>
+                        <span>Selected event · {applications.length} {applications.length === 1 ? "application" : "applications"}</span>
                     </div>
                 </div>
 
+                <div className="applications-metrics" aria-label="Application totals">
+                    <button className={`applications-metric ${statusFilter === "all" ? "is-active" : ""}`} onClick={() => setStatusFilter("all")}>
+                        <span className="applications-metric-icon metric-icon-total">▤</span><span>Total applications</span><strong>{applications.length}</strong>
+                    </button>
+                    <button className={`applications-metric ${statusFilter === "pending" ? "is-active" : ""}`} onClick={() => setStatusFilter("pending")}>
+                        <span className="applications-metric-icon metric-icon-pending">◷</span><span>Pending review</span><strong>{pendingCount}</strong>
+                    </button>
+                    <button className={`applications-metric ${statusFilter === "approved" ? "is-active" : ""}`} onClick={() => setStatusFilter("approved")}>
+                        <span className="applications-metric-icon metric-icon-approved">✓</span><span>Approved</span><strong>{approvedCount}</strong>
+                    </button>
+                    <button className={`applications-metric ${statusFilter === "rejected" ? "is-active" : ""}`} onClick={() => setStatusFilter("rejected")}>
+                        <span className="applications-metric-icon metric-icon-rejected">×</span><span>Rejected</span><strong>{rejectedCount}</strong>
+                    </button>
+                </div>
+
                 <section className="applications-grid" aria-label="Applications">
-                    {applications.map((application, index) => {
+                    {filteredApplications.map((application, index) => {
                         const key = applicationKey(application, index);
                         const isReviewing = reviewingApplicationKey === key;
-                        const reviewed = application.status !== "Pending";
+                        const normalizedStatus = normalizeStatus(application.status);
+                        const isPending = normalizedStatus === "pending";
                         return (
                             <article className="application-card" key={key}>
                                 <div className="application-card-heading">
@@ -193,27 +228,28 @@ export default function Applications() {
                                         <h3>{application.userName || "Student"}</h3>
                                         <span>Event applicant</span>
                                     </div>
-                                    <span className={statusClass(application.status)}>{application.status || "Pending"}</span>
+                                    <span className={statusClass(application.status)}>{normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1)}</span>
                                 </div>
                                 <div className="application-card-details">
                                     <div><span>Mobile number</span><strong>{application.mobile || "Not provided"}</strong></div>
                                     <div><span>Event</span><strong>{selectedEvent?.title || `Event #${application.eventId}`}</strong></div>
                                 </div>
-                                <div className="application-card-footer">
-                                    <span>{reviewed ? "This application has been reviewed" : "Waiting for review"}</span>
+                                {isPending && <div className="application-card-footer">
+                                    <span>{isReviewing ? "Updating status…" : "Waiting for review"}</span>
                                     <div className="application-review-actions">
-                                        <button className="btn-success" onClick={() => handleReview(application, "Approved", index)} disabled={reviewed || isReviewing}>
+                                        <button className="btn-success" onClick={() => handleReview(application, "Approved", index)} disabled={isReviewing}>
                                             {isReviewing ? "Saving…" : "Approve"}
                                         </button>
-                                        <button className="btn-danger" onClick={() => handleReview(application, "Rejected", index)} disabled={reviewed || isReviewing}>
+                                        <button className="btn-danger" onClick={() => handleReview(application, "Rejected", index)} disabled={isReviewing}>
                                             Reject
                                         </button>
                                     </div>
-                                </div>
+                                </div>}
                             </article>
                         );
                     })}
                 </section>
+                {filteredApplications.length === 0 && <div className="applications-filter-empty">No {statusFilter} applications for this event.</div>}
             </>}
 
             {loadingApplications && <div className="applications-empty"><span className="loading-spinner" /><p>Loading applications…</p></div>}
