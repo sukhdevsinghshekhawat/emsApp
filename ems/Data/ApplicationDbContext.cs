@@ -29,7 +29,7 @@ namespace ems.Data
             base.OnModelCreating(modelBuilder);
 
             // Composite Primary Key
-            modelBuilder.Entity<UserRole>().HasKey(u => new { u.userId, u.roleId });
+            modelBuilder.Entity<UserRole>().HasKey(u => u.userId);
 
             // User Relationship
             modelBuilder.Entity<UserRole>().HasOne(u => u.User).WithMany(u => u.UserRoles).HasForeignKey(u => u.userId);

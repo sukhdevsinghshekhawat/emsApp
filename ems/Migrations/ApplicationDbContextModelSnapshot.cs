@@ -93,6 +93,9 @@ namespace ems.Migrations
                         .HasMaxLength(12)
                         .HasColumnType("varchar(12)");
 
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
                     b.Property<string>("Mobile")
                         .IsRequired()
                         .HasMaxLength(10)
@@ -159,7 +162,7 @@ namespace ems.Migrations
                     b.Property<int>("roleId")
                         .HasColumnType("int");
 
-                    b.HasKey("userId", "roleId");
+                    b.HasKey("userId");
 
                     b.HasIndex("roleId");
 

@@ -6,12 +6,14 @@ namespace ems.Dto
     {
         [Required]
         public int UserId { get; set; }
+
         [Required]
         public int EventId { get; set; }
 
         [Required]
         [MinLength(12)]
         [MaxLength(12)]
+
         public string Aadhar { get; set; } = string.Empty;
         [Required]
         [MinLength(10)]

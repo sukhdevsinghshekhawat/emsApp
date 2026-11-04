@@ -51,7 +51,7 @@ namespace ems.Controllers
             return Ok(response);
         }
 
-        [HttpGet("myapplication/{uersId}")]
+        [HttpGet("myapplication/{userId}")]
         [Authorize(Roles = "Student")]
         public async Task<ActionResult> GetMyApplication(int userId)
         {
@@ -68,7 +68,30 @@ namespace ems.Controllers
             return Ok(response);
         }
 
+        [HttpPut("review")]
+        [Authorize(Roles = "Admin,Teacher")]
+        public async Task<ActionResult> ApplicationEdit([FromBody] ReviewApplicationDto dto)
+        {
+            var application = await _context.EventApplications
+                .FirstOrDefaultAsync(a =>
+                    a.UserId == dto.UserId && a.EventId == dto.EventId);
 
+            if (application == null)
+            {
+                return NotFound("Application not found");
+            }
+
+            if (dto.Status != "Approved" && dto.Status != "Rejected")
+            {
+                return BadRequest("Invalid status.");
+            }
+
+            application.Status = dto.Status;
+
+            await _context.SaveChangesAsync();
+
+            return Ok("Application status updated successfully");
+        }
 
     }
 }
