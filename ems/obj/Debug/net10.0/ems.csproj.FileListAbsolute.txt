@@ -214,8 +214,8 @@
 /home/sukhdev/ems/bin/Debug/net10.0/System.IdentityModel.Tokens.Jwt.dll
 /home/sukhdev/emsApp/ems/bin/Debug/net10.0/appsettings.Development.json
 /home/sukhdev/emsApp/ems/bin/Debug/net10.0/appsettings.json
-/home/sukhdev/emsApp/ems/bin/Debug/net10.0/ems.staticwebassets.endpoints.json
 /home/sukhdev/emsApp/ems/bin/Debug/net10.0/ems.staticwebassets.runtime.json
+/home/sukhdev/emsApp/ems/bin/Debug/net10.0/ems.staticwebassets.endpoints.json
 /home/sukhdev/emsApp/ems/bin/Debug/net10.0/ems
 /home/sukhdev/emsApp/ems/bin/Debug/net10.0/ems.deps.json
 /home/sukhdev/emsApp/ems/bin/Debug/net10.0/ems.runtimeconfig.json
@@ -345,6 +345,7 @@
 /home/sukhdev/emsApp/ems/obj/Debug/net10.0/ems.MvcApplicationPartsAssemblyInfo.cache
 /home/sukhdev/emsApp/ems/obj/Debug/net10.0/ems.RazorAssemblyInfo.cache
 /home/sukhdev/emsApp/ems/obj/Debug/net10.0/ems.RazorAssemblyInfo.cs
+/home/sukhdev/emsApp/ems/obj/Debug/net10.0/ems.sourcelink.json
 /home/sukhdev/emsApp/ems/obj/Debug/net10.0/rjimswa.dswa.cache.json
 /home/sukhdev/emsApp/ems/obj/Debug/net10.0/rjsmrazor.dswa.cache.json
 /home/sukhdev/emsApp/ems/obj/Debug/net10.0/rjsmcshtml.dswa.cache.json

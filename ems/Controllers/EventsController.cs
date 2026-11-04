@@ -4,11 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using ems.Dto.request;
 using ems.Dto.response;
 using ems.Models;
+using ems.Dto;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ems.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/events")]
     public class EventsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -19,6 +21,7 @@ namespace ems.Controllers
         }
 
         [HttpGet("gets")]
+        [Authorize(Roles = "Student,Teacher,Admin")]
         public async Task<ActionResult> GetAllEvents()
         {
             var events = await _context.Events.Include(e => e.DepartmentEvents).ThenInclude(de => de.Department).ToListAsync();
@@ -30,6 +33,7 @@ namespace ems.Controllers
             var response = events.Select(e => new EventsResponse
             {
                 Message = "Events fetched successfully",
+                Id = e.Id,
                 Title = e.Title,
                 Description = e.Description,
                 Venue = e.Venue,
@@ -47,7 +51,9 @@ namespace ems.Controllers
 
             return Ok(response);
         }
+
         [HttpPost("create")]
+        [Authorize(Roles = "Teacher,Admin")]
         public async Task<ActionResult> CreateEvent([FromBody] EventsDto dto)
         {
             if (dto == null)
@@ -101,6 +107,7 @@ namespace ems.Controllers
                 var response = new EventsResponse
                 {
                     Message = "Event created successfully",
+                    Id = newEvent.Id,
                     Title = newEvent.Title,
                     Venue = newEvent.Venue,
                     Description = newEvent.Description,
@@ -133,6 +140,7 @@ namespace ems.Controllers
         }
 
         [HttpPut("edit/{id}")]
+        [Authorize(Roles = "Teacher,Admin")]
         public async Task<ActionResult> EditEvent(int id, [FromBody] EventsDto dto)
         {
             var existEvent = await _context.Events.FirstOrDefaultAsync(e => e.Id == id);
@@ -205,6 +213,7 @@ namespace ems.Controllers
         }
 
         [HttpDelete("delete/{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> DeleteEvent(int id)
         {
             var existEvent = await _context.Events.FirstOrDefaultAsync(e => e.Id == id);
@@ -240,6 +249,35 @@ namespace ems.Controllers
                     innerException = ex.InnerException?.Message
                 });
             }
+
         }
+
+        [HttpGet("application/{eventId}")]
+        [Authorize(Roles = "Teacher,Admin")]
+        public async Task<ActionResult> GetApplications(int eventId)
+        {
+            var events = await _context.Events.AnyAsync(u => u.Id == eventId);
+            if (!events)
+            {
+                return NotFound("Event not found");
+            }
+
+            var applications = await _context.EventApplications.Where(u => u.EventId == eventId).Include(u => u.User).ToListAsync();
+            if (applications.Count == 0)
+            {
+                return Ok("No applications received for this event.");
+            }
+            var response = applications.Select(ea => new EventApplicationResponse
+            {
+                UserId = ea.UserId,
+                EventId = ea.EventId,
+                UserName = ea.User?.Name,
+                Aadhar = ea.Aadhar,
+                Mobile = ea.Mobile,
+                Status = ea.Status
+            });
+            return Ok(response);
+        }
+
     }
 }

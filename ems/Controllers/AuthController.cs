@@ -34,7 +34,7 @@ namespace ems.Controllers
                 return BadRequest(new { message = "email already exists" });
             }
             // Find default role
-            var role = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Employee");
+            var role = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Student");
 
             if (role == null)
             {

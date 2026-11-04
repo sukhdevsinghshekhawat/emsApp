@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using ems.Data;
 using ems.Dto;
 using ems.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +21,7 @@ namespace ems.Controllers
         }
 
         [HttpPost("create")]
+        [Authorize(Roles = "Student")]
         public async Task<ActionResult> Create([FromBody] EventApplicationDto dto)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == dto.UserId);
@@ -39,7 +42,7 @@ namespace ems.Controllers
             };
             await _context.AddAsync(apply);
             await _context.SaveChangesAsync();
-            var response = new EventApplicationRwsponse
+            var response = new EventApplicationResponse
             {
                 Message = "Application submited",
                 Status = dto.Status
@@ -47,6 +50,25 @@ namespace ems.Controllers
 
             return Ok(response);
         }
+
+        [HttpGet("myapplication/{uersId}")]
+        [Authorize(Roles = "Student")]
+        public async Task<ActionResult> GetMyApplication(int userId)
+        {
+
+            var applications = await _context.EventApplications.Where(ea => ea.UserId == userId).Include(ea => ea.Event).ToListAsync();
+            var response = applications.Select(ea => new MyApplicationResponseDto
+            {
+                Title = ea.Event?.Title,
+                Venue = ea.Event?.Venue,
+                EventDate = ea.Event.EventDate,
+                Status = ea.Status
+            }).ToList();
+
+            return Ok(response);
+        }
+
+
 
     }
 }
