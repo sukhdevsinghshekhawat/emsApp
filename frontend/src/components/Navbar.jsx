@@ -17,7 +17,7 @@ export default function Navbar() {
             { label: "Dashboard", to: "/dashboard" },
             { label: "Events", to: "/events" },
             { label: "Applications", to: "/applications" },
-            { label: "Manage Teachers", to: "/admin/teachers" },
+            { label: "Manage Users", to: "/admin/users" },
         ],
         Teacher: [
             { label: "Dashboard", to: "/dashboard" },

@@ -1,23 +1,34 @@
-import { fetchWithAuth } from "./auth";
+import { fetchWithAuth, getUserId } from "./auth";
 
 export async function submitApplication(payload) {
-    return fetchWithAuth("/applications", {
+    const userId = getUserId();
+    if (!userId) throw new Error("Could not read your user ID. Please log in again.");
+
+    return fetchWithAuth("/applications/create", {
         method: "POST",
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+            userId: Number(userId),
+            eventId: Number(payload.eventId),
+            aadhar: payload.aadhar,
+            mobile: payload.mobile,
+            status: "Pending",
+        }),
     });
 }
-
 export async function getMyApplications() {
-    return fetchWithAuth("/applications/my");
+    const userId = getUserId();
+    if (!userId) throw new Error("Could not read your user ID. Please log in again.");
+    const encodedUserId = encodeURIComponent(userId);
+    return fetchWithAuth(`/applications/myapplication/${encodedUserId}?userId=${encodedUserId}`);
 }
 
-export async function getAllApplications() {
-    return fetchWithAuth("/applications");
-}
-
-export async function reviewApplication(id, payload) {
-    return fetchWithAuth(`/applications/${id}/status`, {
+export async function reviewApplication(payload) {
+    return fetchWithAuth("/applications/review", {
         method: "PUT",
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+            userId: Number(payload.userId),
+            eventId: Number(payload.eventId),
+            status: payload.status,
+        }),
     });
 }

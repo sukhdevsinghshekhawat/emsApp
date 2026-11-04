@@ -5,9 +5,10 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Events from "./pages/Events";
+import CreateEvent from "./pages/CreateEvent";
 import Applications from "./pages/Applications";
 import MyApplications from "./pages/MyApplications";
-import AdminTeachers from "./pages/AdminTeachers";
+import AdminUsers from "./pages/AdminUsers";
 
 function App() {
   return (
@@ -34,6 +35,22 @@ function App() {
             }
           />
           <Route
+            path="/events/create"
+            element={
+              <ProtectedRoute roles={["Admin", "Teacher"]}>
+                <CreateEvent />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/events/:id/edit"
+            element={
+              <ProtectedRoute roles={["Admin", "Teacher"]}>
+                <CreateEvent />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/applications"
             element={
               <ProtectedRoute roles={["Admin", "Teacher"]}>
@@ -50,10 +67,10 @@ function App() {
             }
           />
           <Route
-            path="/admin/teachers"
+            path="/admin/users"
             element={
               <ProtectedRoute roles={["Admin"]}>
-                <AdminTeachers />
+                <AdminUsers />
               </ProtectedRoute>
             }
           />

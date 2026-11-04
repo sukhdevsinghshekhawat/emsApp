@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { registerUser } from "../api/auth";
+import { getDepartments } from "../api/departments";
 import { validatePassword, validateRequiredText } from "../utils/validation";
-
-const DEPARTMENTS = [1, 2, 3];
 
 export default function Register() {
     const navigate = useNavigate();
@@ -13,12 +12,34 @@ export default function Register() {
         email: "",
         password: "",
         confirmPassword: "",
-        department: 1,
+        department: "",
     });
 
+    const [departments, setDepartments] = useState([]);
+    const [loadingDepartments, setLoadingDepartments] = useState(true);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        let cancelled = false;
+        getDepartments()
+            .then((data) => {
+                if (cancelled) return;
+                const departmentList = Array.isArray(data) ? data : [];
+                setDepartments(departmentList);
+                if (departmentList.length) {
+                    setFormData((current) => ({ ...current, department: String(departmentList[0].id) }));
+                }
+            })
+            .catch((err) => {
+                if (!cancelled) setError(err.message || "Could not load departments.");
+            })
+            .finally(() => {
+                if (!cancelled) setLoadingDepartments(false);
+            });
+        return () => { cancelled = true; };
+    }, []);
 
     function handleChange(e) {
         setFormData({
@@ -110,10 +131,12 @@ export default function Register() {
                     required
                     style={{ width: "100%", padding: 12, border: "1px solid #d1d5db", borderRadius: 6 }}
                 >
-                    {DEPARTMENTS.map((d) => (
-                        <option key={d} value={d}>{d}</option>
+                    <option value="">{loadingDepartments ? "Loading departments…" : "Select a department"}</option>
+                    {departments.map((department) => (
+                        <option key={department.id} value={department.id}>{department.departmentName}</option>
                     ))}
                 </select>
+                {!loadingDepartments && !departments.length && <small className="field-hint">No departments are available. Please try again later.</small>}
 
                 <label htmlFor="password">Password</label>
                 <input
@@ -144,7 +167,7 @@ export default function Register() {
                     required
                 />
 
-                <button type="submit" disabled={loading}>
+                <button type="submit" disabled={loading || loadingDepartments || !departments.length}>
                     {loading ? "Creating Account..." : "Register"}
                 </button>
 

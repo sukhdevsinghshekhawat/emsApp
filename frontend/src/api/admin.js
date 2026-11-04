@@ -1,27 +1,16 @@
 import { fetchWithAuth } from "./auth";
 
-export async function createTeacher(payload) {
-    return fetchWithAuth("/admin/teachers", {
-        method: "POST",
-        body: JSON.stringify(payload),
-    });
+export async function getUsers() {
+    return fetchWithAuth("/users");
 }
 
-export async function getTeachers() {
-    return fetchWithAuth("/admin/teachers");
+export async function getRoles() {
+    return fetchWithAuth("/roles");
 }
 
-export async function deleteTeacher(id) {
-    return fetchWithAuth(`/admin/teachers/${id}`, { method: "DELETE" });
-}
-
-export async function getStudents() {
-    return fetchWithAuth("/admin/students");
-}
-
-export async function setUserStatus(id, isActive) {
-    return fetchWithAuth(`/admin/users/${id}/status`, {
-        method: "PATCH",
-        body: JSON.stringify({ isActive }),
+export async function updateUserRole(userId, roleId) {
+    return fetchWithAuth("/user-roles/edit-role", {
+        method: "PUT",
+        body: JSON.stringify({ userId: Number(userId), roleId: Number(roleId) }),
     });
 }

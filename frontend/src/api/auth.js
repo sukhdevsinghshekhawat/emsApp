@@ -1,22 +1,27 @@
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "/api").replace(/\/$/, "");
 
 async function getErrorMessage(response, fallback) {
-    const data = await response.json().catch(() => null);
+    const raw = await response.text().catch(() => "");
+    let data = null;
+    try {
+        data = raw ? JSON.parse(raw) : null;
+    } catch {
+        data = raw;
+    }
     const details = Array.isArray(data?.errors)
         ? data.errors
         : data?.errors && typeof data.errors === "object"
             ? Object.values(data.errors).flatMap((value) => Array.isArray(value) ? value : [value])
             : [];
-    return [data?.message || data?.title, ...details]
+    return [typeof data === "string" ? data : data?.message || data?.title, ...details]
         .filter((value, index, values) => typeof value === "string" && value && values.indexOf(value) === index)
         .join("\n") || fallback;
 }
-
 export async function loginUser(credentials) {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
+        body: JSON.stringify({ email: credentials.email, passwordHash: credentials.password }),
     });
 
     if (!response.ok) {
@@ -66,14 +71,26 @@ export async function fetchWithAuth(endpoint, options = {}) {
         return null;
     }
 
-    return response.json();
+    const body = await response.text();
+    if (!body) return null;
+    try {
+        return JSON.parse(body);
+    } catch {
+        return body;
+    }
 }
 
 export async function registerUser(userData) {
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
+        body: JSON.stringify({
+            name: userData.fullName,
+            email: userData.email,
+            departmentId: Number(userData.department),
+            passwordHash: userData.password,
+            confirmPasswordHash: userData.confirmPassword,
+        }),
     });
 
     if (!response.ok) {
@@ -107,8 +124,8 @@ export function getUserRole() {
         decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ||
         decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role"] ||
         null;
-    if (Array.isArray(roleClaim)) return roleClaim[0] || null;
-    return roleClaim;
+    const role = Array.isArray(roleClaim) ? roleClaim[0] : roleClaim;
+    return role === "Employee" ? "Student" : role || null;
 }
 
 export function getUserDepartment() {
@@ -123,6 +140,8 @@ export function getUserFullName() {
     return decoded.fullName || decoded.name || null;
 }
 
-export async function fetchMe() {
-    return fetchWithAuth("/auth/me");
+export function getUserId() {
+    const decoded = decodeToken();
+    if (!decoded) return null;
+    return decoded.nameid || decoded.sub || decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] || null;
 }

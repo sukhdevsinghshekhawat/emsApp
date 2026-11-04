@@ -4,7 +4,7 @@ import { defineConfig, loadEnv } from 'vite'
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, ".", "")
-  const backendUrl = (env.BACKEND_URL || " http://localhost:5174").replace(/\/+$/, "")
+  const backendUrl = (env.BACKEND_URL || "http://localhost:5174").trim().replace(/\/+$/, "")
 
   return {
     plugins: [react()],
