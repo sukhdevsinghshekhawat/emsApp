@@ -82,10 +82,8 @@ namespace ems.Migrations
 
             modelBuilder.Entity("ems.Models.EventApplication", b =>
                 {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("EventId")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
                     b.Property<string>("Aadhar")
@@ -93,7 +91,7 @@ namespace ems.Migrations
                         .HasMaxLength(12)
                         .HasColumnType("varchar(12)");
 
-                    b.Property<int>("Id")
+                    b.Property<int>("EventId")
                         .HasColumnType("int");
 
                     b.Property<string>("Mobile")
@@ -105,9 +103,15 @@ namespace ems.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.HasKey("UserId", "EventId");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("EventId");
+
+                    b.HasIndex("UserId", "EventId")
+                        .IsUnique();
 
                     b.ToTable("EventApplications");
                 });
@@ -212,7 +216,7 @@ namespace ems.Migrations
                     b.HasOne("ems.Models.Department", "Department")
                         .WithMany("Users")
                         .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Department");
@@ -223,7 +227,7 @@ namespace ems.Migrations
                     b.HasOne("ems.Models.Role", "Role")
                         .WithMany("UserRoles")
                         .HasForeignKey("roleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ems.Models.User", "User")

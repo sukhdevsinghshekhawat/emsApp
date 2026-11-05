@@ -10,6 +10,7 @@ namespace ems.Controllers
 {
     [ApiController]
     [Route("api/applications")]
+    [Authorize]
     public class EventApplicationsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -24,6 +25,13 @@ namespace ems.Controllers
         [Authorize(Roles = "Student")]
         public async Task<ActionResult> Create([FromBody] EventApplicationDto dto)
         {
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var studentId = int.Parse(userId);
+            if (dto.UserId != studentId)
+            {
+                return Unauthorized("User is not login");
+            }
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == dto.UserId);
 
             var events = await _context.Events.FirstOrDefaultAsync(e => e.Id == dto.EventId);
@@ -31,6 +39,17 @@ namespace ems.Controllers
             {
                 return BadRequest("invalid ID");
             }
+
+            var alreadyApplied = await _context.EventApplications.AnyAsync(a =>
+                    a.UserId == studentId &&
+                    a.EventId == dto.EventId
+                );
+
+            if (alreadyApplied)
+            {
+                return BadRequest("You have already applied for this event.");
+            }
+
 
             var apply = new EventApplication
             {

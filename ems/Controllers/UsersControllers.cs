@@ -9,6 +9,7 @@ namespace ems.Controllers
 {
     [ApiController]
     [Route("api/users")]
+    [Authorize]
     public class UsersController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -22,7 +23,7 @@ namespace ems.Controllers
         public async Task<ActionResult> GetUsers()
         {
             var users = await _context.Users.Include(r => r.UserRoles).ThenInclude(ur => ur.Role).ToListAsync();
-            if(users == null)
+            if (users == null)
             {
                 return NotFound("User Not Foound");
             }

@@ -18,7 +18,5 @@ namespace ems.Models
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
         public ICollection<EventApplication> EventApplications { get; set; } = new List<EventApplication>();
 
-
-
     }
 }

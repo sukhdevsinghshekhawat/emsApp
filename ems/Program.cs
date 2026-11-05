@@ -1,4 +1,5 @@
 using System.Text;
+using ems.Configuration;
 using ems.Data;
 using ems.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -49,7 +50,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 builder.Services.AddScoped<JwtService>();
-
+builder.Services.AddCorsConfiguration(builder.Configuration);
 builder.Services.AddAuthorization();
 var app = builder.Build();
 
@@ -63,6 +64,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 
 app.UseAuthorization();

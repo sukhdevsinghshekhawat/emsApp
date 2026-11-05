@@ -10,6 +10,8 @@ namespace ems.Controllers
 {
     [ApiController]
     [Route("api/user-roles")]
+    [Authorize]
+
     public class UserRolesController : Controller
     {
         private readonly ApplicationDbContext _context;

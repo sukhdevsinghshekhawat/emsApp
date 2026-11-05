@@ -11,6 +11,7 @@ namespace ems.Controllers
 {
     [ApiController]
     [Route("api/events")]
+    [Authorize]
     public class EventsController : Controller
     {
         private readonly ApplicationDbContext _context;
