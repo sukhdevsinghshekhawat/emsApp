@@ -17,7 +17,7 @@ namespace ems.Models
         [Required]
         public string? PasswordHash { get; set; }
 
-        [Compare("PasswordHash")]
+        [Compare("Password", ErrorMessage = "Password does not match")]
         [Required]
         public string? ConfirmPasswordHash { get; set; }
 
