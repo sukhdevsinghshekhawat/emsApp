@@ -1,4 +1,4 @@
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "/api").replace(/\/$/, "");
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5174/api").replace(/\/$/, "");
 
 async function getErrorMessage(response, fallback) {
     const raw = await response.text().catch(() => "");
